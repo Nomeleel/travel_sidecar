@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'travel_transfer_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -24,7 +26,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'My home page',),
+      home: const TravelTransferPage(),
     );
   }
 }
