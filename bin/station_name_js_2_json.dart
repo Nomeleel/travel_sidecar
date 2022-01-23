@@ -21,8 +21,13 @@ void main({List<String> args = const ['station_name_v10168']}) {
         };
       }
 
-      File jsonFile = File(path.join(Directory.current.path, 'assets', 'json', '${args.first}.json'));
-      jsonFile.writeAsStringSync(jsonEncode(stationMap));
+      File jsonFile = File(path.join(Directory.current.path, 'assets', 'json', 'station_name.json'));
+      jsonFile.writeAsStringSync(jsonEncode(
+        {
+          'version': args.first.split('_').last,
+          'station': stationMap,
+        },
+      ));
     }
   }
 }
