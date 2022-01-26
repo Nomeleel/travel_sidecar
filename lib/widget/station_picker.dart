@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../model/station.dart';
+import '../service/station_service.dart';
+
 class StationPicker extends StatefulWidget {
   const StationPicker({
     Key? key,
@@ -7,8 +10,8 @@ class StationPicker extends StatefulWidget {
     this.onPicked,
   }) : super(key: key);
 
-  final String? station;
-  final void Function(String)? onPicked;
+  final Station? station;
+  final void Function(Station)? onPicked;
 
   @override
   _StationPickerState createState() => _StationPickerState();
@@ -18,18 +21,22 @@ class _StationPickerState extends State<StationPicker> {
   final LayerLink _link = LayerLink();
   OverlayEntry? suggestionOverlay;
 
-  final ValueNotifier<List<String>> suggestionList = ValueNotifier([]);
-  late final TextEditingController _inputTextController = TextEditingController(text: widget.station ?? '');
+  final ValueNotifier<List<Station>> suggestionList = ValueNotifier([]);
+  late final TextEditingController _inputTextController = TextEditingController(text: stationName);
   final FocusNode _focusNode = FocusNode();
 
   final double width = 150;
   final double radius = 30;
 
+  final StationService _stationService = StationService();
+
+  String get stationName => widget.station?.name ?? '';
+
   @override
   void didUpdateWidget(covariant StationPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.station != oldWidget.station) {
-      _inputTextController.text = widget.station!;
+      _inputTextController.text = stationName;
     }
   }
 
@@ -51,9 +58,8 @@ class _StationPickerState extends State<StationPicker> {
           decoration: const InputDecoration(
             border: InputBorder.none,
           ),
-          onChanged: (input) {
-            // TODO(Nomeleel): imp.
-            suggestionList.value = List.generate(input.length, (index) => '$index');
+          onChanged: (input) async {
+            suggestionList.value = await _stationService.search(input);
             if (suggestionOverlay == null) {
               suggestionOverlay = buildSuggestionOverlay();
               Overlay.of(context)?.insert(suggestionOverlay!);
@@ -80,7 +86,7 @@ class _StationPickerState extends State<StationPicker> {
               color: Colors.purple,
               child: ValueListenableBuilder(
                 valueListenable: suggestionList,
-                builder: (BuildContext context, List<String> value, Widget? child) {
+                builder: (BuildContext context, List<Station> value, Widget? child) {
                   return ListView.builder(
                     shrinkWrap: true,
                     itemCount: value.length,
@@ -95,7 +101,7 @@ class _StationPickerState extends State<StationPicker> {
                         height: 30,
                         color: index.isEven ? Colors.grey : Colors.transparent,
                         alignment: Alignment.center,
-                        child: Text(value[index]),
+                        child: Text(value[index].name),
                       ),
                     ),
                   );

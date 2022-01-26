@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
+import 'model/station.dart';
+import 'widget/station_picker.dart';
+
 class TravelTransferPage extends StatefulWidget {
   const TravelTransferPage({Key? key}) : super(key: key);
 
@@ -13,11 +16,52 @@ class TravelTransferPage extends StatefulWidget {
 typedef TicketWhere = bool Function(Ticket ticket);
 
 class _TravelTransferPageState extends State<TravelTransferPage> {
+  Station? fromStation;
+  Station? transferStation;
+  Station? toStation;
+
+  DateTime? travelDate;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              StationPicker(
+                station: fromStation,
+                onPicked: (station) => setState(() => fromStation = station),
+              ),
+              StationPicker(
+                station: transferStation,
+                onPicked: (station) => setState(() => transferStation = station),
+              ),
+              StationPicker(
+                station: toStation,
+                onPicked: (station) => setState(() => toStation = station),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () async {
+                      final dateTime = await showDatePicker(
+                        context: context,
+                        initialDate: travelDate ?? DateTime.now(),
+                        firstDate: DateTime(2022),
+                        lastDate: DateTime(2222),
+                      );
+                      if (dateTime != null) setState(() => travelDate = dateTime);
+                    },
+                    icon: const Icon(Icons.date_range),
+                  ),
+                  Text(travelDateStr),
+                ],
+              )
+            ],
+          ),
           IconButton(
             onPressed: _syncTicketList,
             icon: const Icon(Icons.download),
@@ -34,14 +78,20 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
   late List<Ticket> firstTicketList;
   late List<Ticket> secondTicketList;
 
+  bool _isValid() => fromStation != null && transferStation != null && toStation != null && travelDate != null;
+
+  String get travelDateStr => travelDate?.toString().split(' ').first ?? '';
+
   Future<void> _syncTicketList() async {
-    firstTicketList = await _getParseTicketList('WHN', 'ZZF');
-    secondTicketList = await _getParseTicketList('ZZF', 'FGF');
+    if (!_isValid()) return;
+    firstTicketList = await _getParseTicketList(fromStation!.code, transferStation!.code);
+    secondTicketList = await _getParseTicketList(transferStation!.code, toStation!.code);
   }
 
   Future<List<Ticket>> _getParseTicketList(String from, String to) async {
+    // 2022-01-30
     final url = 'https://kyfw.12306.cn/otn/leftTicket/queryA?'
-        'leftTicketDTO.train_date=2022-01-29&'
+        'leftTicketDTO.train_date=$travelDateStr&'
         'leftTicketDTO.from_station=$from&'
         'leftTicketDTO.to_station=$to&'
         'purpose_codes=ADULT';
@@ -63,11 +113,11 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
     return whereList.every((where) => where(ticket));
   }
 
-  int departureTime = 300;
+  int departureTime = 30;
 
   bool whereAfterDepartureTime(Ticket ticket) => ticket.departureTime.mins >= departureTime;
 
-  int arrivalTime = 1080;
+  int arrivalTime = 10800;
 
   bool whereBeforeArrivalTime(Ticket ticket) => ticket.departureTime.mins <= arrivalTime;
 
@@ -89,9 +139,9 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
       for (; sIndex < second.length; sIndex++) {
         final sItem = second[sIndex];
         final duration = sItem.departureTime.mins - fItem.arrivalTime.mins;
-        if (duration > 30 && duration <= 60) {
+        if (duration > 30 && duration <= 120) {
           if (fItem.toCode == sItem.fromCode) {
-            debugPrint('-------------------\n$fItem \n$sItem');
+            debugPrint('--------wait: $duration min-----------\n$fItem \n$sItem');
           }
         } else {
           break;
