@@ -11,6 +11,8 @@ class Station {
   final String code;
   final String simpleAlphabetic;
   final String alphabetic;
+
+  String get feature => '$name-$simpleAlphabetic-$alphabetic';
 }
 
 class StationMap {

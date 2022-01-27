@@ -32,7 +32,10 @@ class StationService {
 
   Future<List<Station>> search(String station) async {
     if (station.isEmpty) return [];
-    // TODO: search use name and alphabetic.
-    return (await stationMap).entries.where((e) => e.value.name.contains(station)).map((e) => e.value).toList();
+    return (await stationMap)
+        .entries
+        .where((e) => e.value.feature.contains(RegExp(station, caseSensitive: false)))
+        .map((e) => e.value)
+        .toList();
   }
 }
