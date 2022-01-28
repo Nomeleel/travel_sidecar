@@ -20,7 +20,7 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
   Station? transferStation;
   Station? toStation;
 
-  DateTime? travelDate;
+  DateTime? travelDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -30,35 +30,26 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              StationPicker(
-                station: fromStation,
-                onPicked: (station) => setState(() => fromStation = station),
-              ),
-              StationPicker(
-                station: transferStation,
-                onPicked: (station) => setState(() => transferStation = station),
-              ),
-              StationPicker(
-                station: toStation,
-                onPicked: (station) => setState(() => toStation = station),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () async {
-                      final dateTime = await showDatePicker(
-                        context: context,
-                        initialDate: travelDate ?? DateTime.now(),
-                        firstDate: DateTime(2022),
-                        lastDate: DateTime(2222),
-                      );
-                      if (dateTime != null) setState(() => travelDate = dateTime);
-                    },
-                    icon: const Icon(Icons.date_range),
-                  ),
-                  Text(travelDateStr),
-                ],
+              stationPickerBuilder('Start', fromStation, (s) => fromStation = s),
+              stationPickerBuilder('Transfer', transferStation, (s) => transferStation = s),
+              stationPickerBuilder('To', toStation, (s) => toStation = s),
+              GestureDetector(
+                onTap: () async {
+                  final dateTime = await showDatePicker(
+                    context: context,
+                    initialDate: travelDate ?? DateTime.now(),
+                    firstDate: DateTime(2022),
+                    lastDate: DateTime(2222),
+                  );
+                  if (dateTime != null) setState(() => travelDate = dateTime);
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.date_range),
+                    Text(travelDateStr),
+                  ],
+                ),
               )
             ],
           ),
@@ -69,9 +60,62 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
           IconButton(
             onPressed: transfer,
             icon: const Icon(Icons.train),
-          )
+          ),
+          if (firstTicketList.isNotEmpty && secondTicketList.isNotEmpty) Expanded(child: resultView()),
         ],
       ),
+    );
+  }
+
+  RangeValues intervalRange = const RangeValues(15, 300);
+
+  Widget resultView() {
+    return Column(
+      children: [
+        Container(
+          height: 100,
+          color: Colors.cyan,
+          alignment: Alignment.center,
+          child: RangeSlider(
+            values: intervalRange,
+            min: 15,
+            max: 300,
+            divisions: 50,
+            labels: RangeLabels(intervalRange.start.toStringAsFixed(1), intervalRange.end.toStringAsFixed(1)),
+            onChanged: (value) {
+              intervalRange = value;
+              transfer();
+            },
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: ticketResultList.length,
+            itemBuilder: (context, index) {
+              final item = ticketResultList[index];
+              return Container(
+                height: 50,
+                alignment: Alignment.center,
+                child: Text(item),
+              );
+            },
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget stationPickerBuilder(String label, Station? station, onPicked) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label),
+        const Icon(Icons.place),
+        StationPicker(
+          station: station,
+          onPicked: (s) => setState(() => onPicked(s)),
+        )
+      ],
     );
   }
 
@@ -105,8 +149,8 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
     return const [];
   }
 
-  late List<TicketWhere> firstWhere = [whereHasTicket];
-  late List<TicketWhere> secondWhere = [whereHasTicket];
+  late List<TicketWhere> firstWhere = [];
+  late List<TicketWhere> secondWhere = [];
 
   bool where(List<TicketWhere> whereList, Ticket ticket) {
     if (whereList.isEmpty) return true;
@@ -123,6 +167,8 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
 
   bool whereHasTicket(Ticket ticket) => ticket.hasTicket;
 
+  List<String> ticketResultList = [];
+
   // TODO(Nomeleel): 隔天问题未考虑 first：23:50到 second：次日00:23出发
   void transfer() {
     final first = firstTicketList.where((e) => where(firstWhere, e)).toList()
@@ -130,7 +176,7 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
 
     final second = secondTicketList.where((e) => where(secondWhere, e)).toList()
       ..sort((i, j) => i.departureTime.mins.compareTo(j.departureTime.mins));
-
+    ticketResultList.clear();
     for (int fIndex = 0, sStart = 0; fIndex < first.length; fIndex++) {
       final fItem = first[fIndex];
       int sIndex = second.indexWhere((e) => e.departureTime.mins > fItem.arrivalTime.mins, sStart);
@@ -138,17 +184,18 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
       sStart = sIndex;
       for (; sIndex < second.length; sIndex++) {
         final sItem = second[sIndex];
-        final duration = sItem.departureTime.mins - fItem.arrivalTime.mins;
-        if (duration > 30 && duration <= 120) {
+        final interval = sItem.departureTime.mins - fItem.arrivalTime.mins;
+        if (interval >= intervalRange.start && interval <= intervalRange.end) {
           if (fItem.toCode == sItem.fromCode) {
-            debugPrint('--------wait: $duration min-----------\n$fItem \n$sItem');
+            ticketResultList.add('--------wait: $interval min-----------\n$fItem \n$sItem');
           }
         } else {
           break;
         }
       }
     }
-    debugPrint('------end---------');
+
+    setState(() {});
   }
 }
 
