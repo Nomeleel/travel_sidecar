@@ -1,9 +1,8 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 import 'model/station.dart';
+import 'model/ticket.dart';
+import 'service/ticket_service.dart';
 import 'widget/station_picker.dart';
 
 class TravelTransferPage extends StatefulWidget {
@@ -119,8 +118,8 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
     );
   }
 
-  late List<Ticket> firstTicketList;
-  late List<Ticket> secondTicketList;
+  List<Ticket> firstTicketList = [];
+  List<Ticket> secondTicketList = [];
 
   bool _isValid() => fromStation != null && transferStation != null && toStation != null && travelDate != null;
 
@@ -132,21 +131,8 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
     secondTicketList = await _getParseTicketList(transferStation!.code, toStation!.code);
   }
 
-  Future<List<Ticket>> _getParseTicketList(String from, String to) async {
-    // 2022-01-30
-    final url = 'https://kyfw.12306.cn/otn/leftTicket/queryA?'
-        'leftTicketDTO.train_date=$travelDateStr&'
-        'leftTicketDTO.from_station=$from&'
-        'leftTicketDTO.to_station=$to&'
-        'purpose_codes=ADULT';
-
-    final response = await http.get(Uri.parse(url), headers: {'Cookie': 'RAIL_DEVICEID=abc;'});
-    if (response.statusCode == 200) {
-      Map map = json.decode(response.body);
-      return map['data']['result'].map<Ticket>((e) => Ticket.fromStr(e)).toList();
-    }
-
-    return const [];
+  Future<List<Ticket>> _getParseTicketList(String from, String to) {
+    return ticketService.query(from: from, to: to, trainDate: travelDateStr);
   }
 
   late List<TicketWhere> firstWhere = [];
@@ -197,49 +183,4 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
 
     setState(() {});
   }
-}
-
-class Ticket {
-  Ticket.fromStr(String str) {
-    final list = str.split('|');
-
-    name = list[3];
-    fromCode = list[6];
-    toCode = list[7];
-    departureTime = StringTime(list[8]);
-    arrivalTime = StringTime(list[9]);
-
-    final numberStr = list[32];
-    hasTicket = numberStr != '' && numberStr != '无' && numberStr != '*';
-  }
-
-  late String name;
-  late String fromCode;
-  late String toCode;
-  late StringTime departureTime;
-  late StringTime arrivalTime;
-  late bool hasTicket;
-
-  @override
-  String toString() {
-    return '$name $departureTime - $arrivalTime';
-  }
-}
-
-// TODO 处理加一天的问题
-class StringTime {
-  StringTime(this.timeStr) {
-    mins = _toMins(timeStr);
-  }
-
-  final String timeStr;
-  late final int mins;
-
-  int _toMins(String timeStr) {
-    final hhmm = timeStr.split(':').map((e) => int.tryParse(e)!);
-    return hhmm.first * 60 + hhmm.last;
-  }
-
-  @override
-  String toString() => timeStr;
 }
