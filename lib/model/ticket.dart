@@ -10,16 +10,29 @@ class Ticket {
     departureTime = StringTime(list[8]);
     arrivalTime = StringTime(list[9]);
 
-    final numberStr = list[32];
-    hasTicket = numberStr != '' && numberStr != '无' && numberStr != '*';
+    hasTicketMap = {};
+    hasTicketStrMap = {};
+    int typeIndex = 0;
+    // TODO(Nomeleel): imp
+    list.getRange(22, 33).toList().reversed.forEach((e) {
+      hasTicketStrMap[typeIndex] = e;
+      hasTicketMap[typeIndex++] = _hasTicket(e);
+    });
   }
 
-  late String name;
-  late String fromCode;
-  late String toCode;
-  late StringTime departureTime;
-  late StringTime arrivalTime;
-  late bool hasTicket;
+  late final String name;
+  late final String fromCode;
+  late final String toCode;
+  late final StringTime departureTime;
+  late final StringTime arrivalTime;
+  late final Map<int, bool> hasTicketMap;
+  late final Map<int, String> hasTicketStrMap;
+
+  final hasTicketRegExp = RegExp(r'(有|\d)');
+
+  bool _hasTicket(String numberStr) => hasTicketRegExp.hasMatch(numberStr);
+
+  bool get hasTicket => hasTicketMap.values.any((e) => e);
 
   @override
   String toString() {
