@@ -11,13 +11,13 @@ class Ticket {
     arrivalTime = StringTime(list[9]);
 
     hasTicketMap = {};
-    hasTicketStrMap = {};
-    int typeIndex = 0;
-    // TODO(Nomeleel): imp
-    list.getRange(22, 33).toList().reversed.forEach((e) {
-      hasTicketStrMap[typeIndex] = e;
-      hasTicketMap[typeIndex++] = _hasTicket(e);
-    });
+    hasTicketMap[SeatType.businessClassSeat] = _hasTicket(list[32]);
+    hasTicketMap[SeatType.firstClassSeat] = _hasTicket(list[31]);
+    hasTicketMap[SeatType.secondClassSeat] = _hasTicket(list[30]);
+    hasTicketMap[SeatType.softSleeper] = _hasTicket(list[23]);
+    hasTicketMap[SeatType.hardSleeper] = _hasTicket(list[28]);
+    hasTicketMap[SeatType.hardSeat] = _hasTicket(list[29]);
+    hasTicketMap[SeatType.standing] = _hasTicket(list[26]);
   }
 
   late final String name;
@@ -25,8 +25,7 @@ class Ticket {
   late final String toCode;
   late final StringTime departureTime;
   late final StringTime arrivalTime;
-  late final Map<int, bool> hasTicketMap;
-  late final Map<int, String> hasTicketStrMap;
+  late final Map<SeatType, bool> hasTicketMap;
 
   final hasTicketRegExp = RegExp(r'(有|\d)');
 
@@ -34,8 +33,22 @@ class Ticket {
 
   bool get hasTicket => hasTicketMap.values.any((e) => e);
 
+  bool hasTicketWhereSeatTypeList([List<SeatType>? seatTypeList]) {
+    return (seatTypeList?.isEmpty ?? true) ? hasTicket : seatTypeList!.any((e) => hasTicketMap[e]!);
+  }
+
   @override
   String toString() {
-    return '$name $departureTime - $arrivalTime';
+    return '$name $departureTime - $arrivalTime\n$hasTicketMap';
   }
+}
+
+enum SeatType {
+  businessClassSeat,
+  firstClassSeat,
+  secondClassSeat,
+  softSleeper,
+  hardSleeper,
+  hardSeat,
+  standing,
 }

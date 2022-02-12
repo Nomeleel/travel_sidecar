@@ -12,7 +12,5 @@ void main() {
 
 void ticketStrTest(str) {
   final Ticket ticket = Ticket.fromStr(str);
-  debugPrint(ticket.name);
-  debugPrint(ticket.hasTicketStrMap.toString());
-  debugPrint(ticket.hasTicketMap.toString());
+  debugPrint(ticket.toString());
 }
