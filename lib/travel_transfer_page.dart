@@ -71,35 +71,70 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
   Widget resultView() {
     return Column(
       children: [
-        Container(
-          height: 100,
-          color: Colors.cyan,
-          alignment: Alignment.center,
-          child: RangeSlider(
-            values: intervalRange,
-            min: 15,
-            max: 300,
-            divisions: 50,
-            labels: RangeLabels(intervalRange.start.toStringAsFixed(1), intervalRange.end.toStringAsFixed(1)),
-            onChanged: (value) {
-              intervalRange = value;
-              transfer();
-            },
-          ),
-        ),
+        filterPanel(),
         Expanded(
           child: ListView.builder(
             itemCount: ticketResultList.length,
             itemBuilder: (context, index) {
               final item = ticketResultList[index];
               return Container(
-                height: 50,
-                alignment: Alignment.center,
+                color: index.isEven ? Colors.grey[350] : Colors.transparent,
                 child: Text(item),
               );
             },
           ),
         )
+      ],
+    );
+  }
+
+  List<SeatType> seatTypeList = [];
+
+  Widget filterPanel() {
+    return Column(
+      children: [
+        RangeSlider(
+          values: intervalRange,
+          min: 15,
+          max: 300,
+          divisions: 50,
+          labels: RangeLabels(intervalRange.start.toStringAsFixed(1), intervalRange.end.toStringAsFixed(1)),
+          onChanged: (value) {
+            intervalRange = value;
+            transfer();
+          },
+        ),
+        Wrap(
+          spacing: 20,
+          children: SeatType.values.map<Widget>(
+            (e) {
+              final checked = seatTypeList.contains(e);
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  checked ? seatTypeList.remove(e) : seatTypeList.add(e);
+
+                  if (seatTypeList.isEmpty) {
+                    firstWhere.remove(whereHasTicket);
+                    secondWhere.remove(whereHasTicket);
+                  } else {
+                    firstWhere.add(whereHasTicket);
+                    secondWhere.add(whereHasTicket);
+                  }
+
+                  transfer();
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IgnorePointer(child: Checkbox(value: checked, onChanged: (_) {})),
+                    Text(e.name),
+                  ],
+                ),
+              );
+            },
+          ).toList(),
+        ),
       ],
     );
   }
@@ -151,7 +186,7 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
 
   bool whereBeforeArrivalTime(Ticket ticket) => ticket.departureTime.mins <= arrivalTime;
 
-  bool whereHasTicket(Ticket ticket) => ticket.hasTicket;
+  bool whereHasTicket(Ticket ticket) => ticket.hasTicketWhereSeatTypeList(seatTypeList);
 
   List<String> ticketResultList = [];
 
