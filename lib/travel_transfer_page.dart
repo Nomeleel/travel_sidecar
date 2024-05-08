@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travel_sidecar/widget/checkbox_label.dart';
 
 import 'model/station.dart';
 import 'model/ticket.dart';
@@ -109,9 +110,10 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
           children: SeatType.values.map<Widget>(
             (e) {
               final checked = seatTypeList.contains(e);
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
+              return CheckboxLabel(
+                checked: checked,
+                label: e.name,
+                onTab: () {
                   checked ? seatTypeList.remove(e) : seatTypeList.add(e);
 
                   if (seatTypeList.isEmpty) {
@@ -124,13 +126,6 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
 
                   transfer();
                 },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IgnorePointer(child: Checkbox(value: checked, onChanged: (_) {})),
-                    Text(e.name),
-                  ],
-                ),
               );
             },
           ).toList(),
