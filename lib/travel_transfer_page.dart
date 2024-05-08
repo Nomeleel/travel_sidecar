@@ -73,6 +73,7 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
     return Column(
       children: [
         filterPanel(),
+        Text('方案个数: ${ticketResultList.length}'),
         Expanded(
           child: ListView.builder(
             itemCount: ticketResultList.length,
@@ -90,6 +91,7 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
   }
 
   List<SeatType> seatTypeList = [];
+  bool mustSameStation = false;
 
   Widget filterPanel() {
     return Column(
@@ -129,6 +131,14 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
               );
             },
           ).toList(),
+        ),
+        CheckboxLabel(
+          checked: mustSameStation,
+          label: '相同车站换乘',
+          onTab: () {
+            mustSameStation = !mustSameStation;
+            transfer();
+          },
         ),
       ],
     );
@@ -202,7 +212,7 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
         final sItem = second[sIndex];
         final interval = sItem.departureTime.mins - fItem.arrivalTime.mins;
         if (interval >= intervalRange.start && interval <= intervalRange.end) {
-          if (fItem.toCode == sItem.fromCode) {
+          if (!mustSameStation || fItem.toCode == sItem.fromCode) {
             ticketResultList.add('--------wait: $interval min-----------\n$fItem \n$sItem');
           }
         } else {
