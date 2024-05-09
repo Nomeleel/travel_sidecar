@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_function_literals_in_foreach_calls
+
 import 'string_time.dart';
 
 class Ticket {
@@ -11,13 +13,8 @@ class Ticket {
     arrivalTime = StringTime(list[9]);
 
     hasTicketMap = {};
-    hasTicketMap[SeatType.businessClassSeat] = _hasTicket(list[32]);
-    hasTicketMap[SeatType.firstClassSeat] = _hasTicket(list[31]);
-    hasTicketMap[SeatType.secondClassSeat] = _hasTicket(list[30]);
-    hasTicketMap[SeatType.softSleeper] = _hasTicket(list[23]);
-    hasTicketMap[SeatType.hardSleeper] = _hasTicket(list[28]);
-    hasTicketMap[SeatType.hardSeat] = _hasTicket(list[29]);
-    hasTicketMap[SeatType.standing] = _hasTicket(list[26]);
+
+    SeatType.values.forEach((e) => hasTicketMap[e] = _hasTicket(list[e.position]));
   }
 
   late final String name;
@@ -44,11 +41,20 @@ class Ticket {
 }
 
 enum SeatType {
-  businessClassSeat,
-  firstClassSeat,
-  secondClassSeat,
-  softSleeper,
-  hardSleeper,
-  hardSeat,
-  standing,
+  businessClassSeat(name: '商务', position: 32),
+  firstClassSeat(name: '一等', position: 31),
+  secondClassSeat(name: '二等', position: 30),
+  softSleeper(name: '软卧', position: 23),
+  hardSleeper(name: '硬卧', position: 28),
+  hardSeat(name: '硬座', position: 29),
+  standing(name: '无座', position: 26);
+
+  const SeatType({required this.name, required this.position});
+
+  final String name;
+
+  final int position;
+
+  @override
+  String toString() => name;
 }
