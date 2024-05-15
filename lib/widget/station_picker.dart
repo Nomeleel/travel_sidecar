@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../model/station.dart';
 import '../service/station_service.dart';
@@ -58,6 +59,9 @@ class _StationPickerState extends State<StationPicker> {
           decoration: const InputDecoration(
             border: InputBorder.none,
           ),
+          inputFormatters: [
+            FilteringTextInputFormatter(RegExp('[a-z]*', caseSensitive: false), allow: true),
+          ],
           onChanged: (input) async {
             suggestionList.value = await _stationService.search(input);
             if (suggestionOverlay == null) {
