@@ -47,7 +47,7 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.date_range),
-                    Text(travelDateStr),
+                    Text(curTravelDateStr),
                   ],
                 ),
               )
@@ -163,16 +163,34 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
 
   bool _isValid() => fromStation != null && transferStation != null && toStation != null && travelDate != null;
 
-  String get travelDateStr => travelDate?.toString().split(' ').first ?? '';
+  String travelDateStr(DateTime? dateTime) => dateTime?.toString().split(' ').first ?? '';
+
+  String get curTravelDateStr => travelDateStr(travelDate);
 
   Future<void> _syncTicketList() async {
     if (!_isValid()) return;
     firstTicketList = await _getParseTicketList(fromStation!.code, transferStation!.code);
     secondTicketList = await _getParseTicketList(transferStation!.code, toStation!.code);
+
+    if (firstTicketList.any((e) => !e.sameDayArrived)) {
+      secondTicketList.addAll(await _getParseTicketList(
+        transferStation!.code,
+        toStation!.code,
+        dateTime: travelDate?.add(const Duration(days: 1)),
+      ));
+    }
   }
 
-  Future<List<Ticket>> _getParseTicketList(String from, String to) {
-    return ticketService.query(from: from, to: to, trainDate: travelDateStr);
+  Future<List<Ticket>> _getParseTicketList(
+    String from,
+    String to, {
+    DateTime? dateTime,
+  }) {
+    return ticketService.query(
+      from: from,
+      to: to,
+      trainDate: travelDateStr(dateTime ?? travelDate),
+    );
   }
 
   late List<TicketWhere> firstWhere = [];

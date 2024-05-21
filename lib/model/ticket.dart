@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_function_literals_in_foreach_calls
 
+import 'package:flutter/material.dart';
+
 import 'string_time.dart';
 
 class Ticket {
@@ -35,6 +37,8 @@ class Ticket {
   bool hasTicketWhereSeatTypeList([List<SeatType>? seatTypeList]) {
     return (seatTypeList?.isEmpty ?? true) ? hasTicket : seatTypeList!.any((e) => hasTicketMap[e]!);
   }
+
+  bool get sameDayArrived => DateUtils.isSameDay(departureTime, arrivalTime);
 
   @override
   String toString() {
