@@ -183,13 +183,13 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
     return whereList.every((where) => where(ticket));
   }
 
-  int departureTime = 30;
+  int departureTime = 0;
 
-  bool whereAfterDepartureTime(Ticket ticket) => ticket.departureTime.mins >= departureTime;
+  bool whereAfterDepartureTime(Ticket ticket) => ticket.departureTime.hour >= departureTime;
 
-  int arrivalTime = 10800;
+  int arrivalTime = 24;
 
-  bool whereBeforeArrivalTime(Ticket ticket) => ticket.departureTime.mins <= arrivalTime;
+  bool whereBeforeArrivalTime(Ticket ticket) => ticket.departureTime.hour <= arrivalTime;
 
   bool whereHasTicket(Ticket ticket) => ticket.hasTicketWhereSeatTypeList(seatTypeList);
 
@@ -198,19 +198,19 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
   // TODO(Nomeleel): 隔天问题未考虑 first：23:50到 second：次日00:23出发
   void transfer() {
     final first = firstTicketList.where((e) => where(firstWhere, e)).toList()
-      ..sort((i, j) => i.arrivalTime.mins.compareTo(j.arrivalTime.mins));
+      ..sort((i, j) => i.arrivalTime.compareTo(j.arrivalTime));
 
     final second = secondTicketList.where((e) => where(secondWhere, e)).toList()
-      ..sort((i, j) => i.departureTime.mins.compareTo(j.departureTime.mins));
+      ..sort((i, j) => i.departureTime.compareTo(j.departureTime));
     ticketResultList.clear();
     for (int fIndex = 0, sStart = 0; fIndex < first.length; fIndex++) {
       final fItem = first[fIndex];
-      int sIndex = second.indexWhere((e) => e.departureTime.mins > fItem.arrivalTime.mins, sStart);
+      int sIndex = second.indexWhere((e) => e.departureTime.isAfter(fItem.arrivalTime), sStart);
       if (sIndex == -1) break;
       sStart = sIndex;
       for (; sIndex < second.length; sIndex++) {
         final sItem = second[sIndex];
-        final interval = sItem.departureTime.mins - fItem.arrivalTime.mins;
+        final interval = sItem.departureTime.difference(fItem.arrivalTime).inMinutes;
         if (interval >= intervalRange.start && interval <= intervalRange.end) {
           if (!mustSameStation || fItem.toCode == sItem.fromCode) {
             ticketResultList.add('--------wait: $interval min-----------\n$fItem \n$sItem');

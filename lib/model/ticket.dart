@@ -9,8 +9,10 @@ class Ticket {
     name = list[3];
     fromCode = list[6];
     toCode = list[7];
-    departureTime = StringTime(list[8]);
-    arrivalTime = StringTime(list[9]);
+
+    final dateStr = list[13];
+    departureTime = DateTime.parse('$dateStr ${list[8]}');
+    arrivalTime = departureTime.add(Duration(minutes: StringTime(list[10]).mins));
 
     hasTicketMap = {};
 
@@ -20,8 +22,8 @@ class Ticket {
   late final String name;
   late final String fromCode;
   late final String toCode;
-  late final StringTime departureTime;
-  late final StringTime arrivalTime;
+  late final DateTime departureTime;
+  late final DateTime arrivalTime;
   late final Map<SeatType, bool> hasTicketMap;
 
   final hasTicketRegExp = RegExp(r'(有|\d)');
