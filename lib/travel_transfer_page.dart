@@ -4,7 +4,7 @@ import 'package:travel_sidecar/widget/checkbox_label.dart';
 import 'model/station.dart';
 import 'model/ticket.dart';
 import 'service/ticket_service.dart';
-import 'widget/station_picker.dart';
+import 'widget/station_picker_v2.dart';
 
 class TravelTransferPage extends StatefulWidget {
   const TravelTransferPage({Key? key}) : super(key: key);
@@ -30,9 +30,9 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              stationPickerBuilder('Start', fromStation, (s) => fromStation = s),
-              stationPickerBuilder('Transfer', transferStation, (s) => transferStation = s),
-              stationPickerBuilder('To', toStation, (s) => toStation = s),
+              stationPickerBuilder('Start', (s) => fromStation = s),
+              stationPickerBuilder('Transfer', (s) => transferStation = s),
+              stationPickerBuilder('To', (s) => toStation = s),
               GestureDetector(
                 onTap: () async {
                   final dateTime = await showDatePicker(
@@ -144,14 +144,13 @@ class _TravelTransferPageState extends State<TravelTransferPage> {
     );
   }
 
-  Widget stationPickerBuilder(String label, Station? station, onPicked) {
+  Widget stationPickerBuilder(String label, onPicked) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(label),
         const Icon(Icons.place),
         StationPicker(
-          station: station,
           onPicked: (s) => setState(() => onPicked(s)),
         )
       ],
